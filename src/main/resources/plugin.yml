@@ -1,8 +1,8 @@
 name: MetinTasi
-version: '1.0'
+version: '${project.version}'
 main: dev.lexon.metintasi.MetinTasiPlugin
-api-version: '1.20'
-description: Metin Taşı ödül ve sıralama eklentisi
+api-version: '1.21'
+description: Paper 1.21.x için Metin Taşı ödül ve sıralama eklentisi
 author: CordiDev
 loadbefore:
   - AutoPickup

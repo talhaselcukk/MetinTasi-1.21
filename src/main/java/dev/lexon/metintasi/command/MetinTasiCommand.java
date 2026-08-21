@@ -42,6 +42,7 @@ public class MetinTasiCommand implements CommandExecutor, TabCompleter {
             case "admin" -> handleAdmin(sender);
             case "spawn" -> handleSpawn(sender, args);
             case "remove" -> handleRemove(sender);
+            case "reset" -> handleReset(sender, args);
             case "list" -> handleList(sender);
             case "reward" -> handleReward(sender, args);
             case "hologram" -> handleHologram(sender, args);
@@ -351,6 +352,50 @@ public class MetinTasiCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(plugin.getConfigManager().getMessage("stone-removed"));
     }
 
+    private void handleReset(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("metintasi.admin")) {
+            sender.sendMessage(plugin.getConfigManager().getMessage("no-permission"));
+            return;
+        }
+
+        if (args.length >= 2 && (args[1].equalsIgnoreCase("all")
+                || args[1].equalsIgnoreCase("tum") || args[1].equalsIgnoreCase("hepsi"))) {
+            int count = 0;
+            for (MetinStone stone : new ArrayList<>(plugin.getMetinStoneManager().getAllStones())) {
+                plugin.getMetinStoneManager().resetStone(stone);
+                count++;
+            }
+            sender.sendMessage(plugin.getConfigManager().getMessage("all-stones-reset")
+                    .replace("<adet>", String.valueOf(count)));
+            return;
+        }
+
+        MetinStone stone;
+        if (args.length >= 2) {
+            String name = joinArgs(args, 1);
+            stone = plugin.getMetinStoneManager().findStoneByDisplayName(name);
+            if (stone == null) {
+                sender.sendMessage(plugin.getConfigManager().getMessage("stone-not-found-name")
+                        .replace("<isim>", name));
+                return;
+            }
+        } else if (sender instanceof Player player) {
+            org.bukkit.block.Block target = player.getTargetBlockExact(5);
+            stone = target == null ? null : plugin.getMetinStoneManager().getStoneAt(target.getLocation());
+            if (stone == null) {
+                player.sendMessage(plugin.getConfigManager().getMessage("reset-target-required"));
+                return;
+            }
+        } else {
+            sender.sendMessage(plugin.getConfigManager().getMessage("usage-reset"));
+            return;
+        }
+
+        plugin.getMetinStoneManager().resetStone(stone);
+        sender.sendMessage(plugin.getConfigManager().getMessage("stone-reset")
+                .replace("<isim>", stone.getDisplayName()));
+    }
+
     private void handleList(CommandSender sender) {
         if (!sender.hasPermission("metintasi.admin")) {
             sender.sendMessage(plugin.getConfigManager().getMessage("no-permission"));
@@ -379,6 +424,7 @@ public class MetinTasiCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(dev.lexon.metintasi.util.ColorUtil.colorize("&e/metintasi admin &7- Panel (para ödülleri, taşlar)"));
         sender.sendMessage(dev.lexon.metintasi.util.ColorUtil.colorize("&e/metintasi spawn [blok] [isim] &7- Taş oluştur"));
         sender.sendMessage(dev.lexon.metintasi.util.ColorUtil.colorize("&e/metintasi remove &7- Baktığın taşı kaldır"));
+        sender.sendMessage(dev.lexon.metintasi.util.ColorUtil.colorize("&e/metintasi reset [taş adı|all] &7- Taşı tam canla yeniden aç"));
         sender.sendMessage(dev.lexon.metintasi.util.ColorUtil.colorize("&e/metintasi list &7- Taşları listele"));
         sender.sendMessage(dev.lexon.metintasi.util.ColorUtil.colorize("&e/metintasi reward additem <şans> [taş|genel] &7- Eşya ödülü; hedef yoksa sohbette sorulur"));
         sender.sendMessage(dev.lexon.metintasi.util.ColorUtil.colorize("&e/metintasi reward move <id> up|down &7- Ödül sırası"));
@@ -395,7 +441,7 @@ public class MetinTasiCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 1) {
             List<String> subs = new ArrayList<>(List.of(
-                    "help", "reload", "admin", "spawn", "remove", "list",
+                    "help", "reload", "admin", "spawn", "remove", "reset", "list",
                     "reward", "hologram", "stone"
             ));
             String input = args[0].toLowerCase(Locale.ROOT);
@@ -412,6 +458,9 @@ public class MetinTasiCommand implements CommandExecutor, TabCompleter {
                     if (completions.size() >= 20) break;
                 }
             }
+        } else if (args.length >= 2 && args[0].equalsIgnoreCase("reset")) {
+            if (args.length == 2 && "all".startsWith(args[1].toLowerCase(Locale.ROOT))) completions.add("all");
+            addStoneNameCompletions(completions, args[args.length - 1]);
         } else if (args.length == 2 && args[0].equalsIgnoreCase("reward")) {
             for (String s : List.of("additem", "move")) {
                 if (s.startsWith(args[1].toLowerCase(Locale.ROOT))) completions.add(s);
