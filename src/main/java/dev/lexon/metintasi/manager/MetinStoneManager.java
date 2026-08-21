@@ -221,6 +221,20 @@ public class MetinStoneManager {
         ReactivationAnnouncements.broadcast(plugin, stone);
     }
 
+    /** Yönetici sıfırlaması: taş kırık veya aktif olsa da tam canla yeniden açar. */
+    public void resetStone(MetinStone stone) {
+        if (stone == null) return;
+        stone.reactivate();
+        if (stone.getLocation().getWorld() != null) {
+            stone.getLocation().getBlock().setType(stone.getBlockType());
+        }
+        saveStone(stone);
+        plugin.getHologramManager().updateHologram(stone);
+        if (plugin.getFloatingHologramManager() != null) {
+            plugin.getFloatingHologramManager().refreshForStone(stone.getId());
+        }
+    }
+
     public void deleteStone(MetinStone stone) {
         if (stone == null) return;
         stones.remove(stone.getLocationKey());

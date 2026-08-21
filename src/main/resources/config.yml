@@ -32,6 +32,7 @@ rewards:
 metin-stone:
   default-block: STONE
   default-health: 100.0
+  # Hasar yalnızca kazmayla blok tamamen kırıldığında verilir; her tam kırma 1 candır.
   damage-per-hit: 1.0
   breaker-timeout: 10
   default-name: "Metin Taşı"

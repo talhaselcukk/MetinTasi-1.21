@@ -3,12 +3,12 @@ package dev.lexon.metintasi.listener;
 import dev.lexon.metintasi.MetinTasiPlugin;
 import dev.lexon.metintasi.model.MetinStone;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockDamageEvent;
 
 public class StoneBreakListener implements Listener {
 
@@ -20,19 +20,18 @@ public class StoneBreakListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
     public void onBlockBreak(BlockBreakEvent event) {
-        MetinStone stone = plugin.getMetinStoneManager().getStoneAt(event.getBlock().getLocation());
-        if (stone == null) return;
-
-        event.setCancelled(true);
-    }
-
-    @EventHandler(priority = EventPriority.HIGH)
-    public void onBlockDamage(BlockDamageEvent event) {
         Player player = event.getPlayer();
         MetinStone stone = plugin.getMetinStoneManager().getStoneAt(event.getBlock().getLocation());
         if (stone == null) return;
 
         event.setCancelled(true);
+
+        // Yalnızca kazmayla tamamlanan gerçek blok kırma işlemi hasar verir.
+        // BlockDamageEvent kullanılmadığı için tıklamak/vurmak can düşürmez.
+        Material tool = player.getInventory().getItemInMainHand().getType();
+        if (!tool.name().endsWith("_PICKAXE")) {
+            return;
+        }
 
         if (stone.isBroken()) {
             player.sendMessage(plugin.getConfigManager().getMessage("stone-already-broken"));
@@ -63,7 +62,8 @@ public class StoneBreakListener implements Listener {
 
         stone.setLastHitTime(System.currentTimeMillis());
 
-        double damage = plugin.getConfigManager().getDamagePerHit();
+        // Kazmanın türü ve enchant seviyesi ne olursa olsun her tam kırma 1 candır.
+        double damage = 1.0;
         stone.damage(damage);
 
         plugin.debug(player.getName() + " hasar verdi: " + damage + " | Kalan can: " + stone.getCurrentHealth());
